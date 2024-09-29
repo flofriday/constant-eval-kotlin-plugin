@@ -8,51 +8,69 @@ import com.tschuchort.compiletesting.SourceFile
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
+import org.junit.Assert
 import org.junit.Test
+import kotlin.math.exp
 
 class IrPluginTest {
+
   @Test
-  fun `IR plugin success`() {
-    val result = compile(
+  fun `Single constant inlining`() {
+    val result = compileWithPlugin(
       sourceFile = SourceFile.kotlin(
         "main.kt", """
 fun main() {
-  println(debug())
+  println(evalThree())
 }
 
-fun debug() = "Hello, World!"
-
-fun three() = 1 + 2
-
-fun canEnter(age: Int) {
-    if (age < 18) {
-    println("No baby boii")
-    }
-    else  {
-    println("Sure big man")
-    }
-}
+fun evalThree() = 3
 """
       )
     )
+
+    val expectedResult = compileWithOutPlugin(
+      sourceFile = SourceFile.kotlin(
+        "main.kt", """
+fun main() {
+  println(evalThree())
+}
+
+fun evalThree() = 3
+"""
+      )
+    )
+
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
+    assertEquals(KotlinCompilation.ExitCode.OK, expectedResult.exitCode)
+    Assert.assertArrayEquals(getByteCode(expectedResult), getByteCode(result))
   }
 }
 
-fun compile(
-  sourceFiles: List<SourceFile>,
-  plugin: CompilerPluginRegistrar = ConstantEvalCompilerRegistrar(),
+
+fun getByteCode(result: JvmCompilationResult): ByteArray {
+  return result.classLoader.getResourceAsStream("MainKt.class")?.readAllBytes()!!
+}
+
+fun compileWithOutPlugin(
+  sourceFile: SourceFile,
 ): JvmCompilationResult {
-  return KotlinCompilation().apply {
-    sources = sourceFiles
-    compilerPluginRegistrars = listOf(plugin)
-    inheritClassPath = true
-  }.compile()
+  return compile(sourceFile, listOf())
+}
+
+fun compileWithPlugin(
+  sourceFile: SourceFile,
+): JvmCompilationResult {
+  return compile(sourceFile, listOf(ConstantEvalCompilerRegistrar()))
 }
 
 fun compile(
   sourceFile: SourceFile,
-  plugin: CompilerPluginRegistrar = ConstantEvalCompilerRegistrar(),
+  plugins: List<CompilerPluginRegistrar>,
 ): JvmCompilationResult {
-  return compile(listOf(sourceFile), plugin)
+  return KotlinCompilation().apply {
+    sources = listOf(sourceFile)
+    compilerPluginRegistrars = plugins
+    inheritClassPath = true
+  }.compile()
 }
+
