@@ -35,11 +35,11 @@ optimization and once without only tells us if the IR rewrite is faulty but not 
 
 Instead, I decided on every testcase containing two programs, once with some constants to evaluate and once where I
 evaluated them by hand. The first program will be compiled with my plugin enabled while the second uses the default 
-compiler. Since the plugin should produce the same IR as the program which I evaluated by hand I can simply compare both
-compiler outputs.
+compiler. Since the plugin should produce the same IR as the program which I evaluated by hand I can simply compare the
+IR Dump of both programs.
 
 ![Testing Pipeline](testing-pipeline.png)
 
 With this strategy we not only know that it the constant evaluation ran but also that it produced what we expected. We 
-therefore don't even need to execute the compiled programs. The only drawback is that if the comparison isn't successfully
-the test output can be quite verbose and hard to read.
+therefore don't even need to execute the compiled programs. The only drawback is that if the comparison isn't 
+successfully, reading the output of large programs can be difficult.

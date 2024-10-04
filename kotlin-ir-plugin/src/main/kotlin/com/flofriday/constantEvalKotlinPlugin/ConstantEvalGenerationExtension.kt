@@ -16,6 +16,13 @@ class ConstantEvalGenerationExtension(
     messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'string' = $string")
     messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'file' = $file")
 
+    // println(moduleFragment.dump())
+    // Thought: can I even do it with a single transform or do I need a visitor first to collect the function bodies and
+    // then in a second iteration transform it?
+    moduleFragment.transform(ConstantEvalTransformer(pluginContext), null)
+    // FIXME: Remove debug log in the future
+    print(moduleFragment.name.asString())
+    println("=== AFTER ===")
     println(moduleFragment.dump())
   }
 }

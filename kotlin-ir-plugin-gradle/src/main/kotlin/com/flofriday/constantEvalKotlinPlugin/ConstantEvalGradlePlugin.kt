@@ -2,6 +2,7 @@
 
 package com.flofriday.constantEvalKotlinPlugin
 
+import com.flofriday.kotlin.BuildConfig
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation

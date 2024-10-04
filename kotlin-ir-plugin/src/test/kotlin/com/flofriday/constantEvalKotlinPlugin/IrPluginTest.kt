@@ -2,75 +2,116 @@
 
 package com.flofriday.constantEvalKotlinPlugin
 
-import com.tschuchort.compiletesting.JvmCompilationResult
+import com.flofriday.constantEvalKotlinPlugin.CaptureIrPlugin.CaptureIrPluginRegistrar
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
-import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.math.exp
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class IrPluginTest {
 
   @Test
   fun `Single constant inlining`() {
-    val result = compileWithPlugin(
+    val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
-        "main.kt", """
-fun main() {
-  println(evalThree())
-}
-
-fun evalThree() = 3
-"""
+        "main.kt",
+        """
+          fun main() {
+            println(evalThree())
+          }
+          
+          fun evalThree() = 3
+        """
       )
     )
 
-    val expectedResult = compileWithOutPlugin(
+    val expectedResult = compileWithOutEval(
       sourceFile = SourceFile.kotlin(
-        "main.kt", """
-fun main() {
-  println(evalThree())
-}
-
-fun evalThree() = 3
-"""
+        "main.kt",
+        """
+          fun main() {
+            println(3)
+          }
+        """.trimIndent()
       )
     )
 
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
-    assertEquals(KotlinCompilation.ExitCode.OK, expectedResult.exitCode)
-    Assert.assertArrayEquals(getByteCode(expectedResult), getByteCode(result))
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
-}
 
 
-fun getByteCode(result: JvmCompilationResult): ByteArray {
-  return result.classLoader.getResourceAsStream("MainKt.class")?.readAllBytes()!!
-}
+  @Test
+  fun `Single constant inlining incorrect`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalThree())
+          }
+          
+          fun evalThree() = 3
+        """
+      )
+    )
 
-fun compileWithOutPlugin(
-  sourceFile: SourceFile,
-): JvmCompilationResult {
-  return compile(sourceFile, listOf())
-}
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(4)
+          }
+        """.trimIndent()
+      )
+    )
 
-fun compileWithPlugin(
-  sourceFile: SourceFile,
-): JvmCompilationResult {
-  return compile(sourceFile, listOf(ConstantEvalCompilerRegistrar()))
-}
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertNotEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
 
-fun compile(
-  sourceFile: SourceFile,
-  plugins: List<CompilerPluginRegistrar>,
-): JvmCompilationResult {
-  return KotlinCompilation().apply {
-    sources = listOf(sourceFile)
-    compilerPluginRegistrars = plugins
-    inheritClassPath = true
-  }.compile()
+  class CompilationResult(
+    val wasSuccessfull: Boolean,
+    val mainIrDump: String,
+  )
+
+  fun compileWithOutEval(
+    sourceFile: SourceFile,
+  ): CompilationResult {
+    return compile(sourceFile, listOf())
+  }
+
+  fun compileWithEval(
+    sourceFile: SourceFile,
+  ): CompilationResult {
+    return compile(sourceFile, listOf(ConstantEvalCompilerRegistrar()))
+  }
+
+  fun compile(
+    sourceFile: SourceFile,
+    plugins: List<CompilerPluginRegistrar>,
+  ): CompilationResult {
+
+    var dumpedIr = ""
+    val capturePlugin = CaptureIrPluginRegistrar({ dumped: String -> dumpedIr = dumped })
+
+    val jvmResult = KotlinCompilation().apply {
+      sources = listOf(sourceFile)
+      compilerPluginRegistrars = plugins + listOf(capturePlugin)
+      inheritClassPath = true
+    }.compile()
+
+    return CompilationResult(
+      jvmResult.exitCode.equals(KotlinCompilation.ExitCode.OK),
+      dumpedIr,
+    )
+  }
 }
 
