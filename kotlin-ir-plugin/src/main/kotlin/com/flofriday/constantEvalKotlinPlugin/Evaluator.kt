@@ -28,14 +28,6 @@ class Evaluator(
     throw StopEvalSignal("No return statement encountered")
   }
 
-  override fun visitConst(expression: IrConst<*>, data: Nothing?): Any? {
-    if (!constantTypes.contains(expression.type)) {
-      throw StopEvalSignal("Found constant of unsupported type: ${expression.type}")
-    }
-
-    return expression.value
-  }
-
   override fun visitBlockBody(body: IrBlockBody, data: Nothing?): Any? {
     // Push a new environment because we are in a new scope
     val oldEnv = environment
@@ -50,14 +42,38 @@ class Evaluator(
     return null;
   }
 
+  override fun visitCall(expression: IrCall, data: Nothing?): Any? {
+    // Evaluate all the arguments
+    val arguments = expression.valueArguments.map { valueArgument -> valueArgument!!.accept(this, null) }
+
+    // Load and execute the function
+    // I wish I could have used reflection here but I couldn't get it to work without throwing an exception that the
+    // caller couldn't be resolved.
+
+    // FIXME: Actually implement this.
+    // val func =  ...
+    // return func(arguments)
+
+    // The following should be a unique identifier:
+    // expression.symbol.owner.parent.kotlinFqName   -> kotlin.Int
+    // expression.symbol.owner.signatureString(true) -> plus(kotlin.Int){}kotlin.Int
+    // expression.symbol.owner.signatureString(true) -> plus(kotlin.Int){}kotlin.Int
+
+
+    return super.visitCall(expression, data)
+  }
+
+  override fun visitConst(expression: IrConst<*>, data: Nothing?): Any? {
+    if (!constantTypes.contains(expression.type)) {
+      throw StopEvalSignal("Found constant of unsupported type: ${expression.type}")
+    }
+
+    return expression.value
+  }
+
   override fun visitElement(element: IrElement, data: Nothing?): Any? {
     // This function is only called on elements we don't know yet
     throw StopEvalSignal("Unknown element: ${element::class}")
-  }
-
-  override fun visitReturn(expression: IrReturn, data: Nothing?): Any? {
-    val value = expression.value.accept(this, data)
-    throw ReturnSignal(value)
   }
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -70,5 +86,11 @@ class Evaluator(
 
     return environment.get(varName)
   }
+
+  override fun visitReturn(expression: IrReturn, data: Nothing?): Any? {
+    val value = expression.value.accept(this, data)
+    throw ReturnSignal(value)
+  }
+
 
 }
