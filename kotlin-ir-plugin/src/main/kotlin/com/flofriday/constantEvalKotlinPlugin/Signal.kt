@@ -19,5 +19,5 @@ class StopEvalSignal(
  * This signal is used to unwind the call stack once we found a solution.
  */
 class ReturnSignal(
-
+  val value: Any?
 ) : RuntimeException() {}

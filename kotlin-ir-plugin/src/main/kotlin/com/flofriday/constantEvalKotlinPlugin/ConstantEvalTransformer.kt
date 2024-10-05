@@ -6,10 +6,11 @@ import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.toIrConst
+import kotlin.math.exp
+
 
 class ConstantEvalTransformer(
   private val pluginContext: IrPluginContext,
@@ -32,8 +33,9 @@ class ConstantEvalTransformer(
     }
 
     // All arguments must be of constant type
-    val arguments = mutableListOf<Any>()
-    for (arg in expression.valueArguments) {
+    val arguments = mutableMapOf<String, Any?>()
+    for (i in 0..<expression.valueArgumentsCount) {
+      val arg = expression.valueArguments[i]
       if (arg !is IrConst<*>) {
         return super.visitCall(expression)
       }
@@ -46,21 +48,36 @@ class ConstantEvalTransformer(
         throw NotImplementedError("Honestly, I don't know what to do here...")
       }
 
-      arguments.add(arg.value!!)
+      arguments[callee.valueParameters[i].name.asString()] = arg.value!!
     }
 
-    // callee.valueParameters.get(0).name
-    println(callee.dump())
-
-    // FIXME: Call the evaluator here 🪄
-
-    println("eval body: ${expression.symbol.owner.body!!.dump()}")
-
-    println("constant eval: ${expression.dump()}")
-    val evaluated = 3
-    return evaluated.toIrConst(pluginContext.irBuiltIns.intType)
+    try {
+      // FIXME: Call the evaluator here 🪄
+      //Int::class.members.single
+      val body = expression.symbol.owner.body!!
+      val evaluator = Evaluator(arguments, body, constantTypes)
+      val result = evaluator.evaluate()
+      return toConstant(result)
+    } catch (e: StopEvalSignal) {
+      // We cannot evaluate the function for some reason.
+      println("StopEvalSignal: '${e.message}'")
+      return super.visitCall(expression)
+    }
   }
 
+  private fun toConstant(value: Any?): IrConst<*> {
+
+    return when(value) {
+      is Int -> value.toIrConst(pluginContext.irBuiltIns.intType)
+      else -> {
+        val typeName = when (value) {
+          null -> "null"
+          else -> value::class.simpleName!!
+        }
+        throw StopEvalSignal("Unsupported Type $typeName")
+      }
+    }
+  }
 
 }
 
