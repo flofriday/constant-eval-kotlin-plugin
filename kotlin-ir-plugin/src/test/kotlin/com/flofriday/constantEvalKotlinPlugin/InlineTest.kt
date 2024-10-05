@@ -9,10 +9,13 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-class IrPluginTest {
-
+/**
+ * These tests are rather simple and only ever inline constants.
+ * There purpose is to check whether the most basic features work.
+ */
+class InlineTest {
   @Test
-  fun `Single constant inlining`() {
+  fun `Inline single int constant`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
@@ -42,9 +45,9 @@ class IrPluginTest {
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
-
+  // This is a super basic test because I once had a bug in my testing setup where all compiled results were emtpy.
   @Test
-  fun `Single constant inlining incorrect`() {
+  fun `Inline single int constant incorrectly`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
@@ -75,7 +78,7 @@ class IrPluginTest {
   }
 
   @Test
-  fun `Inline Id function`() {
+  fun `Inline int identity function`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
@@ -95,6 +98,68 @@ class IrPluginTest {
         """
           fun main() {
             println(42)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Inline bool identity function`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalId(false))
+          }
+          
+          fun evalId(n: Boolean) = n
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(false)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Inline string identity function`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalId("dance"))
+          }
+          
+          fun evalId(n: String) = n
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println("dance")
           }
         """.trimIndent()
       )

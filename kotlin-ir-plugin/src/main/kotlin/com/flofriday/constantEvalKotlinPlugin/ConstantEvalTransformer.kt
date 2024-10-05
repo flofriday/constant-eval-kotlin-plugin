@@ -7,9 +7,7 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.toIrConst
-import kotlin.math.exp
 
 
 class ConstantEvalTransformer(
@@ -27,20 +25,29 @@ class ConstantEvalTransformer(
     }
 
     // Function must return a constant type
-    val constantTypes = listOf(pluginContext.irBuiltIns.intType)
-    if (! constantTypes.contains(callee.returnType)) {
+    val constantTypes = listOf(
+      pluginContext.irBuiltIns.intType,
+      pluginContext.irBuiltIns.booleanType,
+      pluginContext.irBuiltIns.stringType
+    )
+    if (!constantTypes.contains(callee.returnType)) {
+      println("StopEval: return type is not supported ${callee.returnType}")
       return super.visitCall(expression)
     }
 
     // All arguments must be of constant type
-    val arguments = mutableMapOf<String, Any?>()
+    val environment = Environment()
     for (i in 0..<expression.valueArgumentsCount) {
       val arg = expression.valueArguments[i]
+      var argName = callee.valueParameters[i].name.asString()
+
       if (arg !is IrConst<*>) {
+        println("StopEval: argument `$argName` is not a constant")
         return super.visitCall(expression)
       }
 
-      if (! constantTypes.contains(arg.type)) {
+      if (!constantTypes.contains(arg.type)) {
+        println("StopEval: argument `$argName` is a unsupported type ${arg.type}")
         return super.visitCall(expression)
       }
 
@@ -48,14 +55,14 @@ class ConstantEvalTransformer(
         throw NotImplementedError("Honestly, I don't know what to do here...")
       }
 
-      arguments[callee.valueParameters[i].name.asString()] = arg.value!!
+      environment.put(argName, arg.value!!)
     }
 
     try {
       // FIXME: Call the evaluator here 🪄
       //Int::class.members.single
       val body = expression.symbol.owner.body!!
-      val evaluator = Evaluator(arguments, body, constantTypes)
+      val evaluator = Evaluator(environment, body, constantTypes)
       val result = evaluator.evaluate()
       return toConstant(result)
     } catch (e: StopEvalSignal) {
@@ -67,8 +74,10 @@ class ConstantEvalTransformer(
 
   private fun toConstant(value: Any?): IrConst<*> {
 
-    return when(value) {
+    return when (value) {
+      is Boolean -> value.toIrConst(pluginContext.irBuiltIns.booleanType)
       is Int -> value.toIrConst(pluginContext.irBuiltIns.intType)
+      is String -> value.toIrConst(pluginContext.irBuiltIns.stringType)
       else -> {
         val typeName = when (value) {
           null -> "null"
