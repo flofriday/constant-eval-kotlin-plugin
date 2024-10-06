@@ -23,6 +23,7 @@ class Evaluator(
 ) : IrElementVisitor<Any?, Nothing?> {
 
   fun evaluate(): Any? {
+    
     try {
       body.accept(this, null)
     } catch (e: ReturnSignal) {

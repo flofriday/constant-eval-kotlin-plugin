@@ -104,4 +104,36 @@ class OperationsTest {
     assertTrue(expectedResult.wasSuccessfull)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
+
+  @Test
+  fun `Invert bool`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalInvert(false))
+          }
+          
+          fun evalInvert(b: Boolean): Boolean = !b
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(true)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
 }

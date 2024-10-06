@@ -7,9 +7,9 @@ import kotlin.test.assertEquals
 
 
 /**
- * These tests verify that the operators work as advertised.
+ * These tests verify that all control flow constructs like if/when and loops work as expected.
  */
-class ControllFlowTest {
+class ControlFlowTest {
   @Test
   fun `If with condition true hit's body`() {
     val result = compileWithEval(
@@ -307,7 +307,6 @@ class ControllFlowTest {
     assertTrue(expectedResult.wasSuccessfull)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
-
 
   @Test
   fun `While loop to multiply`() {
