@@ -6,6 +6,10 @@ package com.flofriday.constantEvalKotlinPlugin
 // found all the violations.
 val builtinFunctionTable = mapOf<String, (List<Any?>) -> Any?>(
   "kotlin.internal.ir::EQEQ(kotlin.Any?;kotlin.Any?){}" to { args -> args[0] == args[1] }, // Note: I'm only kinda sure this is correct.
+  "kotlin.internal.ir::less(kotlin.Int;kotlin.Int){}" to { args -> (args[0] as Int) < args[1] as Int },
+  "kotlin.internal.ir::lessOrEqual(kotlin.Int;kotlin.Int){}" to { args -> args[0] as Int <= args[1] as Int },
+  "kotlin.internal.ir::greater(kotlin.Int;kotlin.Int){}" to { args -> (args[0] as Int) > args[1] as Int },
+  "kotlin.internal.ir::greaterOrEqual(kotlin.Int;kotlin.Int){}" to { args -> (args[0] as Int) >= args[1] as Int },
 
   "kotlin.Int::and(kotlin.Int){}" to wrapFunction(Int::and),
   "kotlin.Int::compareTo(kotlin.Int){}" to wrapFunction<Int, Int>(Int::compareTo),

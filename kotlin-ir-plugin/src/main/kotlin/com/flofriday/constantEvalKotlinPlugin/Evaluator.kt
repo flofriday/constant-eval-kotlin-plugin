@@ -149,5 +149,13 @@ class Evaluator(
     return null
   }
 
+  override fun visitWhileLoop(loop: IrWhileLoop, data: Nothing?): Any? {
+    while (loop.condition.accept(this, null) as Boolean) {
+      if (loop.body != null) {
+        loop.body!!.accept(this, data)
+      }
+    }
+    return null;
+  }
 
 }
