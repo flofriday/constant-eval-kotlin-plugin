@@ -3,8 +3,8 @@ package com.flofriday.constantEvalKotlinPlugin
 /**
  * A table that holds all builtin functions we support.
  *
- * This allows the functions to be called by any value and will provide tha appopate casts themself.
- * This might be somewhat unsafe, but we trust the typechecker that ran before that it did it job correctly.
+ * This allows the functions to be called by any value and will provide the proper casts themselves.
+ * This might be somewhat unsafe, but we trust the type-checker that ran before that it did it job correctly.
  *
  *  I wish I could have used reflection here, but I couldn't get it to work without throwing an exception that the
  *  caller couldn't be resolved.

@@ -136,7 +136,7 @@ class ComplexTest {
             var i = 0
             var output = ""
             while (i < n) {
-              i++ 
+              i = i + 1
               output += when {
                 (i % 3 == 0 && i % 5 == 0) -> "FizzBuzz"
                 i % 3 == 0 -> "Fizz"
