@@ -1,6 +1,6 @@
 # Constant evaluation Kotlin compiler plugin
 
-A compiler plugin that evaluates some constants (also known as constant folding).
+A compiler plugin that evaluates some constants.
 
 ## Description
 
@@ -44,17 +44,20 @@ To build the plugin run:
 
 ## Testing Strategy
 
-Testing constant evaluation can be tricky, because if it is correctly implemented there shouldn't be any different
-behavior from an optimized and unoptimized program. Therefore, just running the program twice, once compiled with the
-optimization and once without only tells us if the IR rewrite is faulty but not if it ran at all.
+Testing constant evaluation can be tricky, because if it is correctly implemented the optimized program with all
+constants evaluated should be semantically equal.
+This means that if we run the optimized program and an unoptimized version we won't see any difference. While we can use
+that to see if there are wrong evaluations we cannot tell if the optimized program was really optimized.
+(Well technically it should be faster, because that's the point of the optimization but measuring timings can also be
+tricky).
 
-Instead, I decided on every testcase containing two programs, once with some constants to evaluate and once where I
+Instead, I decided that every testcase contains two programs, once with some constants to evaluate and once where I
 evaluated them by hand. The first program will be compiled with my plugin enabled while the second uses the default
-compiler. Since the plugin should produce the same IR as the program which I evaluated by hand I can simply compare the
-IR Dump of both programs.
+compiler. After the plugin ran both programs should be equally so I dump the IR of both programs and compare if the
+dump is equal.
 
 ![Testing Pipeline](testing-pipeline.png)
 
-With this strategy we not only know that it the constant evaluation ran but also that it produced what we expected. We
-therefore don't even need to execute the compiled programs. The only drawback is that if the comparison isn't
-successfully, reading the output of large programs can be difficult.
+With this strategy we not only know that the constant evaluation ran but also that it produced exactly what we expected.
+We therefore don't even need to execute the compiled programs. The IR dump is even readable by humans and even though
+it can get large in some cases it worked great to discover issues.
