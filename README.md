@@ -21,8 +21,8 @@ Inside an eval function the following statements and expressions are allowed:
 
 - Operations on primitives. Basically methods declared inside classes Int, Boolean and String. It ignores Byte, Short,
   Long, Float and Double to simplify things. To avoid repeating, let’s call these types constant types.
-- If/when expressions
-- While loops
+- If/when expressions.
+- While loops.
 - Create val/var variables and set values for them.
 - The "eval" function must return a result of a constant type.
 - The "eval" function can accept only arguments of a constant type.

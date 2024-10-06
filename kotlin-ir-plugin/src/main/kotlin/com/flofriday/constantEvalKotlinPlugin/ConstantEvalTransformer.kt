@@ -2,6 +2,8 @@ package com.flofriday.constantEvalKotlinPlugin
 
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.IrStatement
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -12,6 +14,15 @@ import org.jetbrains.kotlin.ir.util.toIrConst
 class ConstantEvalTransformer(
   private val pluginContext: IrPluginContext,
 ) : IrElementTransformerVoidWithContext() {
+
+  override fun visitFunctionNew(declaration: IrFunction): IrStatement {
+    // Don't rewrite "eval" functions
+    if (declaration.name.asString().startsWith("eval")) {
+      return declaration
+    }
+
+    return super.visitFunctionNew(declaration)
+  }
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   override fun visitCall(expression: IrCall): IrExpression {
