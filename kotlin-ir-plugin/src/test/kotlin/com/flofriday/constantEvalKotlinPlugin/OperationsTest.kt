@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
  */
 class OperationsTest {
   @Test
-  fun `Add operator on ints`() {
+  fun `Add two ints`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
@@ -34,6 +34,68 @@ class OperationsTest {
         """
           fun main() {
             println(3)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Multiple operations on ints`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalMany(1, 2, 3, 4, 5, 6))
+          }
+          
+          fun evalMany(a: Int, b: Int, c: Int, d: Int, e: Int, f: Int) = ((a + 1 + b) * c / d + e) % f
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(2)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `To String on int`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalString(42))
+          }
+          
+          fun evalString(a: Int): String = a.toString()
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println("42")
           }
         """.trimIndent()
       )

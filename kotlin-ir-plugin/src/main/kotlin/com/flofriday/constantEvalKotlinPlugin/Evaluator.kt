@@ -1,9 +1,12 @@
 package com.flofriday.constantEvalKotlinPlugin
 
+import org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr.signatureString
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 
 /**
@@ -43,24 +46,26 @@ class Evaluator(
   }
 
   override fun visitCall(expression: IrCall, data: Nothing?): Any? {
+    // Only functions in these builtin classes are allowed
+    val allowedClasses = listOf("kotlin.Int", "kotlin.Boolean", "kotlin.String")
+
+    val callee = expression.symbol.owner
+    val funcName = callee.parent.kotlinFqName.toString() + "::" + callee.signatureString(false)
+    if (callee.parent.kotlinFqName.toString() !in allowedClasses) {
+      throw StopEvalSignal("Function `funcName` is not supporeted")
+    }
+
     // Evaluate all the arguments
-    val arguments = expression.valueArguments.map { valueArgument -> valueArgument!!.accept(this, null) }
+    val allArgs = listOfNotNull(expression.dispatchReceiver) + expression.valueArguments
+    val arguments = allArgs.map { valueArgument -> valueArgument!!.accept(this, null) }
 
     // Load and execute the function
     // I wish I could have used reflection here but I couldn't get it to work without throwing an exception that the
     // caller couldn't be resolved.
+    val func =
+      builtinFunctionTable[funcName] ?: throw StopEvalSignal("Function `$funcName` is not found in builtinTable")
 
-    // FIXME: Actually implement this.
-    // val func =  ...
-    // return func(arguments)
-
-    // The following should be a unique identifier:
-    // expression.symbol.owner.parent.kotlinFqName   -> kotlin.Int
-    // expression.symbol.owner.signatureString(true) -> plus(kotlin.Int){}kotlin.Int
-    // expression.symbol.owner.signatureString(true) -> plus(kotlin.Int){}kotlin.Int
-
-
-    return super.visitCall(expression, data)
+    return func(arguments)
   }
 
   override fun visitConst(expression: IrConst<*>, data: Nothing?): Any? {
