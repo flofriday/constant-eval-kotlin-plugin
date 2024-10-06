@@ -3,6 +3,7 @@ package com.flofriday.constantEvalKotlinPlugin
 import org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr.signatureString
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
@@ -45,6 +46,7 @@ class Evaluator(
     return null;
   }
 
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
   override fun visitCall(expression: IrCall, data: Nothing?): Any? {
     // Only functions in these builtin classes are allowed
     val allowedClasses = listOf("kotlin.Int", "kotlin.Boolean", "kotlin.String")
@@ -95,6 +97,24 @@ class Evaluator(
   override fun visitReturn(expression: IrReturn, data: Nothing?): Any? {
     val value = expression.value.accept(this, data)
     throw ReturnSignal(value)
+  }
+
+  override fun visitSetValue(expression: IrSetValue, data: Nothing?): Any? {
+    val varName = expression.symbol.owner.name.toString()
+    val value = expression.value.accept(this, data)
+    if (!environment.has(varName)) {
+      throw StopEvalSignal("Variable $varName not found")
+    }
+
+    environment.update(varName, value)
+    return null
+  }
+
+  override fun visitVariable(declaration: IrVariable, data: Nothing?): Any? {
+    val varName = declaration.name.asString()
+    val value = declaration.initializer!!.accept(this, data)
+    environment.put(varName, value)
+    return null;
   }
 
 

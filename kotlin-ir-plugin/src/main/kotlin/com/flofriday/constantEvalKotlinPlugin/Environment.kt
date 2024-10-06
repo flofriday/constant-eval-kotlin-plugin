@@ -27,10 +27,12 @@ class Environment(
   fun update(name: String, value: Any?) {
     if (variables.containsKey(name)) {
       variables[name] = value
+      return
     }
 
     if (enclosingEnvironment != null) {
       enclosingEnvironment!!.update(name, value)
+      return
     }
 
     throw IllegalStateException("Environment variables do not exist: $name")

@@ -1,28 +1,29 @@
-@file:OptIn(ExperimentalCompilerApi::class)
-
 package com.flofriday.constantEvalKotlinPlugin
 
 import com.tschuchort.compiletesting.SourceFile
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.test.assertEquals
 
+
 /**
- * These tests verify that the operators work as advertised.
+ * These tests verify that variables work and are correctly scoped.
  */
-class OperationsTest {
+class VariableTest {
   @Test
-  fun `Add two ints`() {
+  fun `Declare a variable`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
           fun main() {
-            println(evalAdd(1, 2))
+            println(evalThree())
           }
           
-          fun evalAdd(a: Int, b: Int) = a + b
+          fun evalThree(): Int {
+            val a = 3
+            return a
+          }
         """
       )
     )
@@ -44,16 +45,20 @@ class OperationsTest {
   }
 
   @Test
-  fun `Multiple operations on ints`() {
+  fun `Update a variable`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
           fun main() {
-            println(evalMany(1, 2, 3, 4, 5, 6))
+            println(evalThree())
           }
           
-          fun evalMany(a: Int, b: Int, c: Int, d: Int, e: Int, f: Int) = ((a + 1 + b) * c / d + e) % f
+          fun evalThree(): Int {
+            var a = 2
+            a = a + 1
+            return a
+          }
         """
       )
     )
@@ -63,7 +68,7 @@ class OperationsTest {
         "main.kt",
         """
           fun main() {
-            println(2)
+            println(3)
           }
         """.trimIndent()
       )
@@ -75,16 +80,22 @@ class OperationsTest {
   }
 
   @Test
-  fun `To String on int`() {
+  fun `Variable in inner scope doesnot affect outer scope`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
           fun main() {
-            println(evalString(42))
+            println(evalThree())
           }
           
-          fun evalString(a: Int): String = a.toString()
+          fun evalThree(): Int {
+            val a = 3
+            if (true) {
+                val a = 42
+            }
+            return 3
+          }
         """
       )
     )
@@ -94,7 +105,7 @@ class OperationsTest {
         "main.kt",
         """
           fun main() {
-            println("42")
+            println(3)
           }
         """.trimIndent()
       )
@@ -104,4 +115,5 @@ class OperationsTest {
     assertTrue(expectedResult.wasSuccessfull)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
+
 }
