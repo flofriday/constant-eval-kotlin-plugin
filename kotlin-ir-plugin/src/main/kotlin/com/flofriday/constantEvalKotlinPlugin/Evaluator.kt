@@ -17,20 +17,13 @@ import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
  * function a `StopEvalSignal` is thrown with a message to explain why it was stopped.
  */
 class Evaluator(
-  private var environment: Environment,
-  private val body: IrBody,
   private val constantTypes: List<IrType>
 ) : IrElementVisitor<Any?, Nothing?> {
 
-  fun evaluate(): Any? {
-    
-    try {
-      body.accept(this, null)
-    } catch (e: ReturnSignal) {
-      return e.value
-    }
+  private var environment: Environment = Environment()
 
-    throw StopEvalSignal("No return statement encountered")
+  fun evaluate(call: IrCall): Any? {
+    return call.accept(this, null)
   }
 
   override fun visitBlock(expression: IrBlock, data: Nothing?): Any? {
@@ -69,7 +62,42 @@ class Evaluator(
   }
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)
-  override fun visitCall(expression: IrCall, data: Nothing?): Any? {
+  fun visitEvalCall(expression: IrCall, data: Nothing?): Any? {
+    // Function must return a constant type
+    val callee = expression.symbol.owner
+    if (!constantTypes.contains(callee.returnType)) {
+      throw StopEvalSignal("Return type is not supported `${callee.returnType}`")
+    }
+
+    // All arguments must be of constant type
+    // Also construct the environment of the new function
+    val newEnvironment = Environment()
+    for (i in 0..<expression.valueArgumentsCount) {
+      val arg = expression.valueArguments[i]!!
+      val argName = callee.valueParameters[i].name.asString()
+      val value = arg.accept(this, null)
+      newEnvironment.put(argName, value)
+    }
+
+    // Store the current environment and activate the new one
+    val oldEnvironment = environment
+    environment = newEnvironment
+
+    // Execute the body of the new function
+    var result: Any?
+    try {
+      expression.symbol.owner.body!!.accept(this, null)
+      throw StopEvalSignal("No return statement encountered")
+    } catch (e: ReturnSignal) {
+      result = e.value
+    }
+
+    // Reactivate the original environment and return
+    environment = oldEnvironment
+    return result
+  }
+
+  fun visitBuiltInCall(expression: IrCall, data: Nothing?): Any? {
     // Only functions in these builtin classes are allowed
     val allowedClasses = listOf("kotlin.Int", "kotlin.Boolean", "kotlin.String", "kotlin.internal.ir")
 
@@ -90,6 +118,14 @@ class Evaluator(
       builtinFunctionTable[funcName] ?: throw StopEvalSignal("Function `$funcName` is not found in builtinTable")
 
     return func(arguments)
+  }
+
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  override fun visitCall(expression: IrCall, data: Nothing?): Any? {
+    if (expression.symbol.owner.name.asString().startsWith("eval")) {
+      return visitEvalCall(expression, data)
+    }
+    return visitBuiltInCall(expression, data)
   }
 
   override fun visitConst(expression: IrConst<*>, data: Nothing?): Any? {

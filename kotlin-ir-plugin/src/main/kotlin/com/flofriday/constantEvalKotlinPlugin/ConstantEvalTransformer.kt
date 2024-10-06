@@ -2,7 +2,6 @@ package com.flofriday.constantEvalKotlinPlugin
 
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -24,46 +23,16 @@ class ConstantEvalTransformer(
       return super.visitCall(expression)
     }
 
-    // Function must return a constant type
     val constantTypes = listOf(
       pluginContext.irBuiltIns.intType,
       pluginContext.irBuiltIns.booleanType,
       pluginContext.irBuiltIns.stringType
     )
-    if (!constantTypes.contains(callee.returnType)) {
-      println("StopEval: return type is not supported ${callee.returnType}")
-      return super.visitCall(expression)
-    }
 
-    // All arguments must be of constant type
-    val environment = Environment()
-    for (i in 0..<expression.valueArgumentsCount) {
-      val arg = expression.valueArguments[i]
-      var argName = callee.valueParameters[i].name.asString()
-
-      if (arg !is IrConst<*>) {
-        println("StopEval: argument `$argName` is not a constant")
-        return super.visitCall(expression)
-      }
-
-      if (!constantTypes.contains(arg.type)) {
-        println("StopEval: argument `$argName` is a unsupported type ${arg.type}")
-        return super.visitCall(expression)
-      }
-
-      if (arg.value == null) {
-        throw NotImplementedError("Honestly, I don't know what to do here...")
-      }
-
-      environment.put(argName, arg.value!!)
-    }
-
+    // Call the evaluator
     try {
-      // FIXME: Call the evaluator here 🪄
-      //Int::class.members.single
-      val body = expression.symbol.owner.body!!
-      val evaluator = Evaluator(environment, body, constantTypes)
-      val result = evaluator.evaluate()
+      val evaluator = Evaluator(constantTypes)
+      val result = evaluator.evaluate(expression)
       return toConstant(result)
     } catch (e: StopEvalSignal) {
       // We cannot evaluate the function for some reason.
@@ -72,8 +41,10 @@ class ConstantEvalTransformer(
     }
   }
 
+  /**
+   * Converts any of the values we support to a constant.
+   */
   private fun toConstant(value: Any?): IrConst<*> {
-
     return when (value) {
       is Boolean -> value.toIrConst(pluginContext.irBuiltIns.booleanType)
       is Int -> value.toIrConst(pluginContext.irBuiltIns.intType)

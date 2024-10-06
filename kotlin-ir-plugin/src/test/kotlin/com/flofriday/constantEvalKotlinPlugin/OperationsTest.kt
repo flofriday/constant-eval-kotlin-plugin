@@ -136,4 +136,35 @@ class OperationsTest {
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
+  @Test
+  fun `Add strings`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalHello("World"))
+          }
+          
+          fun evalHello(name: String): String = "Hello " + name
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println("Hello World")
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
 }
