@@ -21,7 +21,6 @@ class ConstantEvalGenerationExtension(
     // then in a second iteration transform it?
     moduleFragment.transform(ConstantEvalTransformer(pluginContext), null)
     // FIXME: Remove debug log in the future
-    print(moduleFragment.name.asString())
     println("=== AFTER ===")
     println(moduleFragment.dump())
   }

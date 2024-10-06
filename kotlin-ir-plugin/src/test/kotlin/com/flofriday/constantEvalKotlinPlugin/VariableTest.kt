@@ -80,7 +80,7 @@ class VariableTest {
   }
 
   @Test
-  fun `Variable in inner scope doesnot affect outer scope`() {
+  fun `Variable in inner scope doesn't affect outer scope`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
@@ -94,7 +94,83 @@ class VariableTest {
             if (true) {
                 val a = 42
             }
-            return 3
+            return a
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(3)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Variable in outer scope doesn't affect inner scope`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalThree())
+          }
+          
+          fun evalThree(): Int {
+            val a = 47
+            if (true) {
+                val a = 3
+                return a
+            }
+            return a
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(3)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+
+  @Test
+  fun `Variable in outer scope can be updated from inner scope`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalThree())
+          }
+          
+          fun evalThree(): Int {
+            var a = 47
+            if (true) {
+                a = 3
+            }
+            return a
           }
         """
       )
