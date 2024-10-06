@@ -5,6 +5,8 @@ package com.flofriday.constantEvalKotlinPlugin
 // We also handle with typechecking in a hand-wavey way here because we assume that the type-checker that ran before
 // found all the violations.
 val builtinFunctionTable = mapOf<String, (List<Any?>) -> Any?>(
+  "kotlin.internal.ir::EQEQ(kotlin.Any?;kotlin.Any?){}" to { args -> args[0] == args[1] }, // Note: I'm only kinda sure this is correct.
+
   "kotlin.Int::and(kotlin.Int){}" to wrapFunction(Int::and),
   "kotlin.Int::compareTo(kotlin.Int){}" to wrapFunction<Int, Int>(Int::compareTo),
   "kotlin.Int::dec(){}" to wrapFunction(Int::dec),

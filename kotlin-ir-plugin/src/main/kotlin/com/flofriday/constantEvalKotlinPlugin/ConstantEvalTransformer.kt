@@ -83,7 +83,7 @@ class ConstantEvalTransformer(
           null -> "null"
           else -> value::class.simpleName!!
         }
-        throw StopEvalSignal("Unsupported Type $typeName")
+        throw StopEvalSignal("Unsupported Type `$typeName`")
       }
     }
   }

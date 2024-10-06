@@ -32,6 +32,27 @@ class Evaluator(
     throw StopEvalSignal("No return statement encountered")
   }
 
+  override fun visitBlock(expression: IrBlock, data: Nothing?): Any? {
+    // Push a new environment because we are in a new scope
+    val oldEnv = environment
+    val newEnv = Environment(oldEnv)
+    environment = newEnv
+
+    // FIXME: This doesn't make any sense to me
+    // Even when using a `when` expression as a expression it gets wrapped in an block.
+    // However, a block only contains statements which should not result in values if executed.
+    // However, without returning the value from the last statement (which in that case is actually an expression)
+    // I cannot work with when expressions.
+    // Maybe I'm missing something huge here.
+
+    // Evaluate the block in a new environment
+    val values = expression.statements.map { statement -> statement.accept(this, null) }
+
+    // Drop the environment
+    environment = oldEnv
+    return values.lastOrNull();
+  }
+
   override fun visitBlockBody(body: IrBlockBody, data: Nothing?): Any? {
     // Push a new environment because we are in a new scope
     val oldEnv = environment
@@ -49,12 +70,12 @@ class Evaluator(
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   override fun visitCall(expression: IrCall, data: Nothing?): Any? {
     // Only functions in these builtin classes are allowed
-    val allowedClasses = listOf("kotlin.Int", "kotlin.Boolean", "kotlin.String")
+    val allowedClasses = listOf("kotlin.Int", "kotlin.Boolean", "kotlin.String", "kotlin.internal.ir")
 
     val callee = expression.symbol.owner
     val funcName = callee.parent.kotlinFqName.toString() + "::" + callee.signatureString(false)
     if (callee.parent.kotlinFqName.toString() !in allowedClasses) {
-      throw StopEvalSignal("Function `funcName` is not supporeted")
+      throw StopEvalSignal("Function `$funcName` is not supporeted")
     }
 
     // Evaluate all the arguments
@@ -115,6 +136,17 @@ class Evaluator(
     val value = declaration.initializer!!.accept(this, data)
     environment.put(varName, value)
     return null;
+  }
+
+  override fun visitWhen(expression: IrWhen, data: Nothing?): Any? {
+    for (branch in expression.branches) {
+      val condition = branch.condition.accept(this, data)
+      if (condition as Boolean) {
+        return branch.result.accept(this, data)
+      }
+    }
+
+    return null
   }
 
 
