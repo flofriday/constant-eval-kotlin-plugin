@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 
-class ConstantEvalTransformer(
+class Transformer(
   private val pluginContext: IrPluginContext,
 ) : IrElementTransformerVoidWithContext() {
 

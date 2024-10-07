@@ -30,9 +30,16 @@ Inside an eval function the following statements and expressions are allowed:
 
 ### Bonus features
 
-- Inside "eval" functions calls to other eval functions including itself (recursion) are allowed
+- Inside "eval" functions calls to other "eval" functions are allowed (including recursion)
 - For recursion to work the arguments to an "eval" function, can no longer be restricted to just constants but any
   expression that the evaluator can calculate.
+- Default arguments for "eval" functions can be correctly evaluated and are inserted if the corresponding value is
+  missing.
+
+<!-- String templates? -->
+<!-- Null safety operators? -->
+<!-- continue, break -->
+<!-- do-while -->
 
 ## Build and run all tests
 
@@ -41,6 +48,10 @@ To build the plugin run:
 ```bash
 ./gradlew build
 ```
+
+Since this is a compiler plugin that implements a performance optimization there aren't any fancy examples. However,
+to verify that my implementation is correct I wrote some demanding tests which you can find in `ComplexTest.kt`
+(like a test that renders a mandelbrot at compile-time).
 
 ## Testing Strategy
 
@@ -61,3 +72,15 @@ dump is equal.
 With this strategy we not only know that the constant evaluation ran but also that it produced exactly what we expected.
 We therefore don't even need to execute the compiled programs. The IR dump is even readable by humans and even though
 it can get large in some cases it worked great to discover issues.
+
+## Implementation Details
+
+For my test strategy I needed to dump the IR of the main function, however there isn't an easy way to access the IR with
+the otherwise amazing [Kotlin Compile Testing](https://github.com/tschuchortdev/kotlin-compile-testing)
+library. So I wrote another custom compiler plugin called `CaptureIrPlugin` that just dumps
+the IR and registered it to run after the constant evaluation plugin ran. I am sure there must be a better way to
+access it but this approach quite worked well.
+
+The main compiler plugin has two major classes that do most of the work `Transformer` and `Evaluator`. `Transformer`
+finds all calls to "eval" functions and replaces the call with the correct constant. To figure out which
+value the constant should hold it passes the IR of the call to the evaluator which will evaluate the call.

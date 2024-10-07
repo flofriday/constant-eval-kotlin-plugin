@@ -73,9 +73,14 @@ class Evaluator(
     // Also construct the environment of the new function
     val newEnvironment = Environment()
     for (i in 0..<expression.valueArgumentsCount) {
-      val arg = expression.valueArguments[i]!!
       val argName = callee.valueParameters[i].name.asString()
-      val value = arg.accept(this, null)
+      val arg = expression.valueArguments[i]
+      val value = if (arg != null) {
+        arg.accept(this, null)
+      } else {
+        expression.symbol.owner.valueParameters[i].defaultValue?.accept(this, null)
+          ?: throw StopEvalSignal("No argument provided and no default argument")
+      }
       newEnvironment.put(argName, value)
     }
 
@@ -139,6 +144,10 @@ class Evaluator(
   override fun visitElement(element: IrElement, data: Nothing?): Any? {
     // This function is only called on elements we don't know yet
     throw StopEvalSignal("Unknown element: ${element::class}")
+  }
+
+  override fun visitExpressionBody(body: IrExpressionBody, data: Nothing?): Any? {
+    return body.expression.accept(this, null)
   }
 
   @OptIn(UnsafeDuringIrConstructionAPI::class)

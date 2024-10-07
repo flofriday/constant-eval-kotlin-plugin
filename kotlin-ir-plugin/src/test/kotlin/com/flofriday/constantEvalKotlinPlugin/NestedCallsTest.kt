@@ -115,4 +115,72 @@ class NestedCallsTest {
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
+  @Test
+  fun `Eval function with default arguments`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalAddOne())
+            println(evalAddOne(0))
+            println(evalAddOne(1))
+            println(evalAddOne(n=41))
+          }
+          
+         fun evalAddOne(n: Int = 0) = 1 + n
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(1)
+            println(1)
+            println(2)
+            println(42)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Eval function with default arguments in wrong order`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalConcat(b=2, a=4))
+          }
+          
+         fun evalConcat(a: Int = 0, b: Int = 42) = a.toString() + b.toString()
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println("42")
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
 }
