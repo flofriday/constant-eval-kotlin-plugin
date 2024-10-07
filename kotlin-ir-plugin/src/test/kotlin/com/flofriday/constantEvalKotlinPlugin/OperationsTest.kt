@@ -167,4 +167,35 @@ class OperationsTest {
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
+  @Test
+  fun `String template`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalHello("Paul"))
+          }
+
+          fun evalHello(name: String): String = "Hello ${'$'}name!"
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println("Hello Paul!")
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
 }

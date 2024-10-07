@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 
@@ -36,8 +37,11 @@ class Transformer(
 
     val constantTypes = listOf(
       pluginContext.irBuiltIns.intType,
+      pluginContext.irBuiltIns.intType.makeNullable(),
       pluginContext.irBuiltIns.booleanType,
-      pluginContext.irBuiltIns.stringType
+      pluginContext.irBuiltIns.booleanType.makeNullable(),
+      pluginContext.irBuiltIns.stringType,
+      pluginContext.irBuiltIns.stringType.makeNullable(),
     )
 
     // Call the evaluator

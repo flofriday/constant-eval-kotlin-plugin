@@ -36,8 +36,8 @@ Inside an eval function the following statements and expressions are allowed:
 - Default arguments for "eval" functions can be correctly evaluated and are inserted if the corresponding value is
   missing.
 - Implemented `break` and `continue` for loops, with label support.
+- String template expressions are implemented.
 
-<!-- String templates? -->
 <!-- Null safety operators? -->
 <!-- do-while -->
 

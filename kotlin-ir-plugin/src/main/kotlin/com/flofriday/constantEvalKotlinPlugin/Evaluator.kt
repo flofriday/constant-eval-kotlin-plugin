@@ -189,6 +189,10 @@ class Evaluator(
     return null
   }
 
+  override fun visitStringConcatenation(expression: IrStringConcatenation, data: Nothing?): Any? {
+    return expression.arguments.map { expression -> expression.accept(this, data).toString() }.joinToString("")
+  }
+
   override fun visitVariable(declaration: IrVariable, data: Nothing?): Any? {
     val varName = declaration.name.asString()
     val value = declaration.initializer!!.accept(this, data)
