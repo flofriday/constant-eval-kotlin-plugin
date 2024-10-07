@@ -348,5 +348,264 @@ class ControlFlowTest {
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
+  @Test
+  fun `While loop hit's break`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalOne())
+          }
+          
+          fun evalOne(): Int {
+            var n = 1
+            while (true) {
+                break
+                n = 13
+            }
+            return n
+          }
+        """
+      )
+    )
 
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(1)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Nested while loop hit's inner break`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalOne())
+          }
+          
+          fun evalOne(): Int {
+            var n = 666
+            while (true) {
+              while (true) {
+                  break
+                  n = 13
+              }
+              n = 1
+              break
+            }
+            return n
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(1)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Nested while loop hit's outer labeled break`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalOne())
+          }
+          
+          fun evalOne(): Int {
+            var n = 1
+            outer@ while (true) {
+              inner@ while (true) {
+                  break@outer
+                  n = 13
+              }
+              n = 43
+            }
+            return n
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(1)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `While loop hit's continue`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalFive())
+          }
+          
+          fun evalFive(): Int {
+            var i = 0
+            var n = 0
+            while (i < 10) {
+                if (i < 5) {
+                    i += 1
+                    continue
+                }
+                n += 1
+                i += 1
+            }
+            return n
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(5)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `While loop hit's inner continue`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalNum())
+          }
+          
+          fun evalNum(): Int {
+            var i = 0
+            var n = 0
+            while (i < 10) {
+                var j = 0
+                while (j < 10) {
+                  if (j < 8) {
+                      j += 1
+                      continue
+                  }
+                  n += 1
+                  j += 1
+                }
+              n += 100
+              i += 1 
+            }
+            return n
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(1020)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `While loop hit's outer labeled continue`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalNum())
+          }
+          
+          fun evalNum(): Int {
+            var i = 0
+            var n = 0
+            outer@ while (i < 10) {
+                var j = 0
+                while (j < 10) {
+                  if (j >= 8) {
+                      n += 1
+                      j += 1
+                      i += 1 
+                      continue@outer
+                  }
+                  j += 1
+                }
+              n += 100
+              i += 1 
+            }
+            return n
+          }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(10)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessfull)
+    assertTrue(expectedResult.wasSuccessfull)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
 }

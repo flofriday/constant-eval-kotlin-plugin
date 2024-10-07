@@ -9,15 +9,29 @@ package com.flofriday.constantEvalKotlinPlugin
  */
 
 /**
- * This signal is used if for some reason we cannot evaluate the function and instead we will leave the original one.
+ * This signal is used when a execution loop should be stopped.
  */
-class StopEvalSignal(
-  override val message: String? = null
-) : RuntimeException() {}
+class BreakSignal(
+  public val label: String?
+) : RuntimeException()
+
+/**
+ * This signal is used when the current loop iteration execution should be stopped.
+ */
+class ContinueSignal(
+  public val label: String?
+) : RuntimeException()
 
 /**
  * This signal is used to unwind the call stack once we found a solution.
  */
 class ReturnSignal(
   val value: Any?
+) : RuntimeException() {}
+
+/**
+ * This signal is used if for some reason we cannot evaluate the function and instead we will leave the original one.
+ */
+class StopEvalSignal(
+  override val message: String? = null
 ) : RuntimeException() {}

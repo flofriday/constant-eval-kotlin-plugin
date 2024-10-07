@@ -35,10 +35,10 @@ Inside an eval function the following statements and expressions are allowed:
   expression that the evaluator can calculate.
 - Default arguments for "eval" functions can be correctly evaluated and are inserted if the corresponding value is
   missing.
+- Implemented `break` and `continue` for loops, with label support.
 
 <!-- String templates? -->
 <!-- Null safety operators? -->
-<!-- continue, break -->
 <!-- do-while -->
 
 ## Build and run all tests

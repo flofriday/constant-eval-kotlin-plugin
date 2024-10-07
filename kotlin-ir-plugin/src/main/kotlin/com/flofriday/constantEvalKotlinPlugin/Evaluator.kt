@@ -61,6 +61,10 @@ class Evaluator(
     return null;
   }
 
+  override fun visitBreak(jump: IrBreak, data: Nothing?): Any? {
+    throw BreakSignal(jump.label)
+  }
+
   @OptIn(UnsafeDuringIrConstructionAPI::class)
   fun visitEvalCall(expression: IrCall, data: Nothing?): Any? {
     // Function must return a constant type
@@ -95,6 +99,10 @@ class Evaluator(
       throw StopEvalSignal("No return statement encountered")
     } catch (e: ReturnSignal) {
       result = e.value
+    } catch (e: ContinueSignal) {
+      throw StopEvalSignal("continue signal escaped function")
+    } catch (e: BreakSignal) {
+      throw StopEvalSignal("break signal escaped function")
     }
 
     // Reactivate the original environment and return
@@ -139,6 +147,10 @@ class Evaluator(
     }
 
     return expression.value
+  }
+
+  override fun visitContinue(jump: IrContinue, data: Nothing?): Any? {
+    throw ContinueSignal(jump.label)
   }
 
   override fun visitElement(element: IrElement, data: Nothing?): Any? {
@@ -196,10 +208,26 @@ class Evaluator(
   }
 
   override fun visitWhileLoop(loop: IrWhileLoop, data: Nothing?): Any? {
-    while (loop.condition.accept(this, null) as Boolean) {
-      if (loop.body != null) {
-        loop.body!!.accept(this, data)
+    try {
+      while (loop.condition.accept(this, null) as Boolean) {
+        if (loop.body != null) {
+          try {
+            loop.body!!.accept(this, data)
+          } catch (e: ContinueSignal) {
+            if (e.label != null && e.label != loop.label) {
+              // We want to continue but not in this loop but in an outer one, so let's rethrow the exception
+              throw e
+            }
+          }
+        }
       }
+    } catch (e: BreakSignal) {
+      if (e.label != null && e.label != loop.label) {
+        // We want to break but not only this loop but also from an outer one so, let's rethrow the exception
+        throw e
+      }
+
+      // The execution of the loop was already stopped so we don't need to do anything here.
     }
     return null;
   }
