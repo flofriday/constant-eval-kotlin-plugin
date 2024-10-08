@@ -1,6 +1,6 @@
 # Constant evaluation Kotlin compiler plugin
 
-A compiler plugin that evaluates some constants.
+A compiler plugin that evaluates constants functions.
 
 ## Description
 
@@ -8,7 +8,7 @@ All functions with the `eval` prefix are evaluated (if possible).
 
 ```Kotlin
 fun main() {
-    // evalAdd(1, 2) must be evaluated as 3
+    // evalAdd(1, 2) will be evaluated to 3
     println(evalAdd(1, 2))
 }
 
@@ -17,7 +17,7 @@ fun evalAdd(a: Int, b: Int): Int {
 }
 ```
 
-Inside an eval function the following statements and expressions are allowed:
+Inside an "eval" function the following statements and expressions are allowed:
 
 - Operations on primitives. Basically methods declared inside classes Int, Boolean and String. It ignores Byte, Short,
   Long, Float and Double to simplify things. To avoid repeating, let’s call these types constant types.
@@ -38,9 +38,6 @@ Inside an eval function the following statements and expressions are allowed:
 - Implemented `break` and `continue` for loops, with label support.
 - String template expressions are implemented.
 
-<!-- Null safety operators? -->
-<!-- do-while -->
-
 ## Build and run all tests
 
 To build the plugin run:
@@ -58,19 +55,19 @@ to verify that my implementation is correct I wrote some demanding tests which y
 Testing constant evaluation can be tricky, because if it is correctly implemented the optimized program with all
 constants evaluated should be semantically equal.
 This means that if we run the optimized program and an unoptimized version we won't see any difference. While we can use
-that to see if there are wrong evaluations we cannot tell if the optimized program was really optimized.
+that to see if there are wrong evaluations, we cannot tell if the optimized program was really optimized.
 (Well technically it should be faster, because that's the point of the optimization but measuring timings can also be
 tricky).
 
-Instead, I decided that every testcase contains two programs, once with some constants to evaluate and once where I
-evaluated them by hand. The first program will be compiled with my plugin enabled while the second uses the default
-compiler. After the plugin ran both programs should be equally so I dump the IR of both programs and compare if the
+Instead, I decided that every testcase contains two programs, one with some constants to evaluate and another one where
+I evaluated them by hand. The first program will be compiled with my plugin enabled while the second uses the default
+compiler. After the compiler ran both programs should be equal, so I dump the IR of both programs and compare if the
 dump is equal.
 
 ![Testing Pipeline](testing-pipeline.png)
 
 With this strategy we not only know that the constant evaluation ran but also that it produced exactly what we expected.
-We therefore don't even need to execute the compiled programs. The IR dump is even readable by humans and even though
+We therefore don't even need to execute the compiled programs. The IR dump is even readable by humans and though
 it can get large in some cases it worked great to discover issues.
 
 ## Implementation Details
@@ -78,9 +75,10 @@ it can get large in some cases it worked great to discover issues.
 For my test strategy I needed to dump the IR of the main function, however there isn't an easy way to access the IR with
 the otherwise amazing [Kotlin Compile Testing](https://github.com/tschuchortdev/kotlin-compile-testing)
 library. So I wrote another custom compiler plugin called `CaptureIrPlugin` that just dumps
-the IR and registered it to run after the constant evaluation plugin ran. I am sure there must be a better way to
-access it but this approach quite worked well.
+the IR and registered it to run after the constant evaluation plugin. I am sure there must be a better way to
+access it but this approach worked quite well.
 
 The main compiler plugin has two major classes that do most of the work `Transformer` and `Evaluator`. `Transformer`
 finds all calls to "eval" functions and replaces the call with the correct constant. To figure out which
-value the constant should hold it passes the IR of the call to the evaluator which will evaluate the call.
+value the constant should hold it passes the IR of the call to the `Evaluator` which will evaluate the call.
+The `Evaluator` really is a Tree Traversing Interpreter for a subset of Kotlin.

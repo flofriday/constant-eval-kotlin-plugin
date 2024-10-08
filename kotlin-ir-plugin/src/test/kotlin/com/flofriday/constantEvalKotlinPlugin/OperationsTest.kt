@@ -38,8 +38,8 @@ class OperationsTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
@@ -69,8 +69,8 @@ class OperationsTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
@@ -100,8 +100,8 @@ class OperationsTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
@@ -131,8 +131,8 @@ class OperationsTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
@@ -162,8 +162,8 @@ class OperationsTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
@@ -193,8 +193,8 @@ class OperationsTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 

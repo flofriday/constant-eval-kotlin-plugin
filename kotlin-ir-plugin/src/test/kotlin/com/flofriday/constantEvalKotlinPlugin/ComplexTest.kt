@@ -5,6 +5,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.test.assertEquals
 
+/**
+ * This file doesn't test a specific part of the plugin but more the interplay of different features by evaluating some
+ * more demanding functions.
+ */
 class ComplexTest {
   @Test
   fun `MandelBrot Renderer`() {
@@ -115,8 +119,8 @@ class ComplexTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
 
   }
@@ -178,8 +182,8 @@ class ComplexTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
 
   }
@@ -234,8 +238,8 @@ class ComplexTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 
@@ -279,8 +283,8 @@ class ComplexTest {
       )
     )
 
-    assertTrue(result.wasSuccessfull)
-    assertTrue(expectedResult.wasSuccessfull)
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
     assertEquals(result.mainIrDump, expectedResult.mainIrDump)
   }
 

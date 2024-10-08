@@ -3,7 +3,7 @@ package com.flofriday.constantEvalKotlinPlugin
 /**
  * The environment holds all variables and their values of the current scope.
  *
- * It points to it's parent since all their variables should also be readable.
+ * It points to it's parent since all their variables should also be reachable.
  */
 class Environment(
   private var enclosingEnvironment: Environment? = null,

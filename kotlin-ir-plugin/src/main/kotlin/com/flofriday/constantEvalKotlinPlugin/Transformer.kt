@@ -8,7 +8,6 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 
@@ -37,11 +36,8 @@ class Transformer(
 
     val constantTypes = listOf(
       pluginContext.irBuiltIns.intType,
-      pluginContext.irBuiltIns.intType.makeNullable(),
       pluginContext.irBuiltIns.booleanType,
-      pluginContext.irBuiltIns.booleanType.makeNullable(),
       pluginContext.irBuiltIns.stringType,
-      pluginContext.irBuiltIns.stringType.makeNullable(),
     )
 
     // Call the evaluator
@@ -51,9 +47,13 @@ class Transformer(
       return toConstant(result)
     } catch (e: StopEvalSignal) {
       // We cannot evaluate the function for some reason.
+      // This isn't really an issue though
       println("StopEvalSignal: '${e.message}'")
-      return super.visitCall(expression)
+    } catch (e: Exception) {
+      // In case we made a really bad programming mistake catch everything and leave the call as it was.
+      println("Error during evaluation: ${e.stackTraceToString()}")
     }
+    return super.visitCall(expression)
   }
 
   /**

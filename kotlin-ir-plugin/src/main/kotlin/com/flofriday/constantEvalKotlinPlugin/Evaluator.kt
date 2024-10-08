@@ -73,18 +73,20 @@ class Evaluator(
       throw StopEvalSignal("Return type is not supported `${callee.returnType}`")
     }
 
-    // All arguments must be of constant type
-    // Also construct the environment of the new function
+    // Construct the environment of the new function
     val newEnvironment = Environment()
     for (i in 0..<expression.valueArgumentsCount) {
       val argName = callee.valueParameters[i].name.asString()
       val arg = expression.valueArguments[i]
+
+      // Evaluate the argument or if none provided the default argument.
       val value = if (arg != null) {
         arg.accept(this, null)
       } else {
         expression.symbol.owner.valueParameters[i].defaultValue?.accept(this, null)
           ?: throw StopEvalSignal("No argument provided and no default argument")
       }
+
       newEnvironment.put(argName, value)
     }
 
@@ -110,6 +112,7 @@ class Evaluator(
     return result
   }
 
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
   fun visitBuiltInCall(expression: IrCall, data: Nothing?): Any? {
     // Only functions in these builtin classes are allowed
     val allowedClasses = listOf("kotlin.Int", "kotlin.Boolean", "kotlin.String", "kotlin.internal.ir")
@@ -125,8 +128,6 @@ class Evaluator(
     val arguments = allArgs.map { valueArgument -> valueArgument!!.accept(this, null) }
 
     // Load and execute the function
-    // I wish I could have used reflection here but I couldn't get it to work without throwing an exception that the
-    // caller couldn't be resolved.
     val func =
       builtinFunctionTable[funcName] ?: throw StopEvalSignal("Function `$funcName` is not found in builtinTable")
 
@@ -154,7 +155,8 @@ class Evaluator(
   }
 
   override fun visitElement(element: IrElement, data: Nothing?): Any? {
-    // This function is only called on elements we don't know yet
+    // This function is called on elements where we haven't overwritten the visit method yet.
+    // This means we don't yet know how to deal with them.
     throw StopEvalSignal("Unknown element: ${element::class}")
   }
 
@@ -190,7 +192,7 @@ class Evaluator(
   }
 
   override fun visitStringConcatenation(expression: IrStringConcatenation, data: Nothing?): Any? {
-    return expression.arguments.map { expression -> expression.accept(this, data).toString() }.joinToString("")
+    return expression.arguments.map { arg -> arg.accept(this, data).toString() }.joinToString("")
   }
 
   override fun visitVariable(declaration: IrVariable, data: Nothing?): Any? {
@@ -219,15 +221,16 @@ class Evaluator(
             loop.body!!.accept(this, data)
           } catch (e: ContinueSignal) {
             if (e.label != null && e.label != loop.label) {
-              // We want to continue but not in this loop but in an outer one, so let's rethrow the exception
+              // We want to continue but not in this loop but in an outer one, so let's rethrow the exception.
               throw e
             }
+            // The execution of the current iteration was already stopped so do nothing here.
           }
         }
       }
     } catch (e: BreakSignal) {
       if (e.label != null && e.label != loop.label) {
-        // We want to break but not only this loop but also from an outer one so, let's rethrow the exception
+        // We want to break but not only this loop but also from an outer one so, let's rethrow the exception.
         throw e
       }
 

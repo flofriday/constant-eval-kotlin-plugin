@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 class CompilationResult(
-  val wasSuccessfull: Boolean,
+  val wasSuccessful: Boolean,
   val mainIrDump: String,
 )
 

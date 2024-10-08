@@ -12,14 +12,14 @@ package com.flofriday.constantEvalKotlinPlugin
  * This signal is used when a execution loop should be stopped.
  */
 class BreakSignal(
-  public val label: String?
+  val label: String?
 ) : RuntimeException()
 
 /**
  * This signal is used when the current loop iteration execution should be stopped.
  */
 class ContinueSignal(
-  public val label: String?
+  val label: String?
 ) : RuntimeException()
 
 /**
