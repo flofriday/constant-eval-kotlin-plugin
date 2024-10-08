@@ -30,7 +30,7 @@ Inside an "eval" function the following statements and expressions are allowed:
 
 ### Bonus features
 
-- Inside "eval" functions calls to other "eval" functions are allowed (including recursion)
+- Inside "eval" functions calls to other "eval" functions are allowed (including recursion).
 - For recursion to work the arguments to an "eval" function, can no longer be restricted to just constants but any
   expression that the evaluator can calculate.
 - Default arguments for "eval" functions can be correctly evaluated and are inserted if the corresponding value is
@@ -47,7 +47,8 @@ To build the plugin run:
 ```
 
 Since this is a compiler plugin that implements a performance optimization there aren't any fancy examples. However,
-to verify that my implementation is correct I wrote some demanding tests which you can find in `ComplexTest.kt`
+to verify that my implementation is correct I wrote some demanding tests which you can find in
+[`ComplexTest.kt`](kotlin-ir-plugin/src/test/kotlin/com/flofriday/constantEvalKotlinPlugin/ComplexTest.kt)
 (like a test that renders a mandelbrot at compile-time).
 
 ## Testing Strategy
@@ -56,12 +57,12 @@ Testing constant evaluation can be tricky, because if it is correctly implemente
 constants evaluated should be semantically equal.
 This means that if we run the optimized program and an unoptimized version we won't see any difference. While we can use
 that to see if there are wrong evaluations, we cannot tell if the optimized program was really optimized.
-(Well technically it should be faster, because that's the point of the optimization but measuring timings can also be
+(Well technically it should be faster because that's the point of the optimization but measuring timings can also be
 tricky).
 
 Instead, I decided that every testcase contains two programs, one with some constants to evaluate and another one where
 I evaluated them by hand. The first program will be compiled with my plugin enabled while the second uses the default
-compiler. After the compiler ran both programs should be equal, so I dump the IR of both programs and compare if the
+compiler. After the compiler ran, both programs should be equal, so I dump the IR of both programs and compare if the
 dump is equal.
 
 ![Testing Pipeline](testing-pipeline.png)
@@ -78,7 +79,10 @@ library. So I wrote another custom compiler plugin called `CaptureIrPlugin` that
 the IR and registered it to run after the constant evaluation plugin. I am sure there must be a better way to
 access it but this approach worked quite well.
 
+The actual source code of the plugin can be found in: `constant-eval-kotlin-plugin/kotlin-ir-plugin/src/main/kotlin/com/flofriday
+/constantEvalKotlinPlugin/`.
+
 The main compiler plugin has two major classes that do most of the work `Transformer` and `Evaluator`. `Transformer`
 finds all calls to "eval" functions and replaces the call with the correct constant. To figure out which
-value the constant should hold it passes the IR of the call to the `Evaluator` which will evaluate the call.
+value the constant should hold, it passes the IR node of the call to the `Evaluator` which will evaluate the call.
 The `Evaluator` really is a Tree Traversing Interpreter for a subset of Kotlin.
