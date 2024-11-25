@@ -80,7 +80,7 @@ class VariableTest {
   }
 
   @Test
-  fun `Variable in inner scope doesn't affect outer scope`() {
+  fun `Variable in inner scope doesn't affect outer scope num2`() {
     val result = compileWithEval(
       sourceFile = SourceFile.kotlin(
         "main.kt",
@@ -106,6 +106,46 @@ class VariableTest {
         """
           fun main() {
             println(3)
+          }
+        """.trimIndent()
+      )
+    )
+
+    assertTrue(result.wasSuccessful)
+    assertTrue(expectedResult.wasSuccessful)
+    assertEquals(result.mainIrDump, expectedResult.mainIrDump)
+  }
+
+  @Test
+  fun `Variable in inner scope doesn't affect outer scope with loops`() {
+    val result = compileWithEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(evalOne())
+          }
+          
+          fun evalOne(): Int {
+            var n = 1
+            while (true) {
+                if(true) {
+                    var n = 13
+                    break
+                }
+            }
+            return n
+         }
+        """
+      )
+    )
+
+    val expectedResult = compileWithOutEval(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+          fun main() {
+            println(1)
           }
         """.trimIndent()
       )

@@ -214,6 +214,8 @@ class Evaluator(
   }
 
   override fun visitWhileLoop(loop: IrWhileLoop, data: Nothing?): Any? {
+    val originalEnv = environment;
+
     try {
       while (loop.condition.accept(this, null) as Boolean) {
         if (loop.body != null) {
@@ -224,7 +226,9 @@ class Evaluator(
               // We want to continue but not in this loop but in an outer one, so let's rethrow the exception.
               throw e
             }
-            // The execution of the current iteration was already stopped so do nothing here.
+
+            // The execution of the current iteration was already stopped so only change the env
+            environment = originalEnv
           }
         }
       }
@@ -234,7 +238,8 @@ class Evaluator(
         throw e
       }
 
-      // The execution of the loop was already stopped so we don't need to do anything here.
+      // The execution of the loop was already stopped so only change the scope
+      environment = originalEnv
     }
     return null;
   }
